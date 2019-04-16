@@ -84,9 +84,9 @@ module ThetaPinchEquilibriumEzCosZPerturbation end
 
 # equilibrium list (equilibrium, parameters, periodicity, module)
 eqs = (
-    (AxisymmetricTokamakCartesian,      (1., 2., 2.),   [0., 0., 0.],   AxisymmetricTokamakCartesianEquilibrium),
-    (AxisymmetricTokamakCylindrical,    (1., 2., 2.),   [0., 0., 2π],   AxisymmetricTokamakCylindricalEquilibrium),
-    (AxisymmetricTokamakToroidal,       (1., 2., 2.),   [0., 2π, 2π],   AxisymmetricTokamakToroidalEquilibrium),
+    (AxisymmetricTokamakCartesian,      (2., 3., 2.),   [0., 0., 0.],   AxisymmetricTokamakCartesianEquilibrium),
+    (AxisymmetricTokamakCylindrical,    (2., 3., 2.),   [0., 0., 2π],   AxisymmetricTokamakCylindricalEquilibrium),
+    (AxisymmetricTokamakToroidal,       (2., 3., 2.),   [0., 2π, 2π],   AxisymmetricTokamakToroidalEquilibrium),
     (SymmetricQuadratic,                (1.),           [0., 0., 0.],   SymmetricQuadraticEquilibrium),
     (ThetaPinch,                        (1.),           [0., 0., 0.],   ThetaPinchEquilibrium),
     (ABC,                               (1., 0.5, 0.5), [0., 0., 0.],   ABCEquilibrium),
@@ -131,21 +131,97 @@ println()
 
 # test correctness of some of the magnetic fields
 
-function test_axisymmetric_tokamak_cylindrical_equilibrium(equ_mod, t=0., x=[1.5, 0.5, π])
-    @test equ_mod.B¹(t,x) ≈ - equ_mod.B₀ / equ_mod.q₀ * equ_mod.Z(t,x) / equ_mod.R(t,x)
-    @test equ_mod.B²(t,x) ≈ equ_mod.B₀ / equ_mod.q₀ * (equ_mod.R(t,x) - equ_mod.R₀) / equ_mod.R(t,x)
-    @test equ_mod.B³(t,x) ≈ - equ_mod.B₀ * equ_mod.R₀ / equ_mod.R(t,x)^2
+function test_axisymmetric_tokamak_cartesian_equilibrium(equ_mod, t=0., x=[1.5, 0.0, 0.5])
+    @test equ_mod.B¹(t,x) == equ_mod.B₁(t,x)
+    @test equ_mod.B²(t,x) == equ_mod.B₂(t,x)
+    @test equ_mod.B³(t,x) == equ_mod.B₃(t,x)
+
+    @test equ_mod.B₁(t,x) == - equ_mod.B₀ / equ_mod.q₀ * (equ_mod.q₀ * equ_mod.R₀ * equ_mod.Y(t,x) + equ_mod.X(t,x) * equ_mod.Z(t,x) ) / equ_mod.R(t,x)^2
+    @test equ_mod.B₂(t,x) == + equ_mod.B₀ / equ_mod.q₀ * (equ_mod.q₀ * equ_mod.R₀ * equ_mod.X(t,x) - equ_mod.Y(t,x) * equ_mod.Z(t,x) ) / equ_mod.R(t,x)^2
+    @test equ_mod.B₃(t,x) == + equ_mod.B₀ / equ_mod.q₀ * (equ_mod.R(t,x) - equ_mod.R₀) / equ_mod.R(t,x)
 end
 
-function test_axisymmetric_tokamak_toroidal_equilibrium(equ_mod, t=0., x=[0.5, π/10, π])
-    @test equ_mod.B¹(t,x) == zero(eltype(x))
-    @test equ_mod.B²(t,x) ≈ equ_mod.B₀ / equ_mod.q₀ / equ_mod.R(t,x)
-    @test equ_mod.B³(t,x) ≈ equ_mod.B₀ * equ_mod.R₀ / equ_mod.R(t,x)^2
+function test_axisymmetric_tokamak_cylindrical_equilibrium(equ_mod, t=0., x=[1.5, 0.5, π/5])
+    @test equ_mod.B¹(t,x) == - equ_mod.B₀ / equ_mod.q₀ * equ_mod.Z(t,x) / equ_mod.R(t,x)
+    @test equ_mod.B²(t,x) == + equ_mod.B₀ / equ_mod.q₀ * (equ_mod.R(t,x) - equ_mod.R₀) / equ_mod.R(t,x)
+    @test equ_mod.B³(t,x) == - equ_mod.B₀ * equ_mod.R₀ / equ_mod.R(t,x)^2
+
+    @test equ_mod.B₁(t,x) == - equ_mod.B₀ / equ_mod.q₀ * equ_mod.Z(t,x) / equ_mod.R(t,x)
+    @test equ_mod.B₂(t,x) == + equ_mod.B₀ / equ_mod.q₀ * (equ_mod.R(t,x) - equ_mod.R₀) / equ_mod.R(t,x)
+    @test equ_mod.B₃(t,x) == - equ_mod.B₀ * equ_mod.R₀
 end
 
+function test_axisymmetric_tokamak_toroidal_equilibrium(equ_mod, t=0., x=[0.5, π/10, π/5])
+    @test equ_mod.B¹(t,x) == 0
+    @test equ_mod.B²(t,x) == equ_mod.B₀ / equ_mod.q₀ / equ_mod.R(t,x)
+    @test equ_mod.B³(t,x) == equ_mod.B₀ * equ_mod.R₀ / equ_mod.R(t,x)^2
+
+    @test equ_mod.B₁(t,x) == 0
+    @test equ_mod.B₂(t,x) == equ_mod.B₀ / equ_mod.q₀ * equ_mod.r(t,x)^2 / equ_mod.R(t,x)
+    @test equ_mod.B₃(t,x) == equ_mod.B₀ * equ_mod.R₀
+end
+
+function test_symmetric_quadratic_equilibrium(equ_mod, t=0., x=[1.0, 0.5, 0.5])
+    @test equ_mod.B¹(t,x) == equ_mod.B₁(t,x)
+    @test equ_mod.B²(t,x) == equ_mod.B₂(t,x)
+    @test equ_mod.B³(t,x) == equ_mod.B₃(t,x)
+
+    @test equ_mod.B₁(t,x) == 0
+    @test equ_mod.B₂(t,x) == 0
+    @test equ_mod.B₃(t,x) == equ_mod.B₀ * (1 + equ_mod.X(t,x)^2 + equ_mod.Y(t,x)^2)
+
+    @test equ_mod.B(t,x)  == equ_mod.B₀ * (1 + equ_mod.X(t,x)^2 + equ_mod.Y(t,x)^2)
+
+    @test equ_mod.b¹(t,x) == 0
+    @test equ_mod.b²(t,x) == 0
+    @test equ_mod.b³(t,x) == 1
+
+    @test equ_mod.b₁(t,x) == 0
+    @test equ_mod.b₂(t,x) == 0
+    @test equ_mod.b₃(t,x) == 1
+end
+
+
+function test_theta_pinch_equilibrium(equ_mod, t=0., x=[1.0, 0.5, 0.5])
+    @test equ_mod.B¹(t,x) == equ_mod.B₁(t,x)
+    @test equ_mod.B²(t,x) == equ_mod.B₂(t,x)
+    @test equ_mod.B³(t,x) == equ_mod.B₃(t,x)
+
+    @test equ_mod.B₁(t,x) == 0
+    @test equ_mod.B₂(t,x) == 0
+    @test equ_mod.B₃(t,x) == equ_mod.B₀
+
+    @test equ_mod.B(t,x)  == equ_mod.B₀
+
+    @test equ_mod.b¹(t,x) == 0
+    @test equ_mod.b²(t,x) == 0
+    @test equ_mod.b³(t,x) == 1
+
+    @test equ_mod.b₁(t,x) == 0
+    @test equ_mod.b₂(t,x) == 0
+    @test equ_mod.b₃(t,x) == 1
+end
+
+function test_abc_equilibrium(equ_mod, t=0., x=[1.0, 0.5, 0.5])
+    @test equ_mod.B¹(t,x) == equ_mod.B₁(t,x)
+    @test equ_mod.B²(t,x) == equ_mod.B₂(t,x)
+    @test equ_mod.B³(t,x) == equ_mod.B₃(t,x)
+
+    @test equ_mod.B₁(t,x) == equ_mod.A₁(t,x)
+    @test equ_mod.B₂(t,x) == equ_mod.A₂(t,x)
+    @test equ_mod.B₃(t,x) == equ_mod.A₃(t,x)
+
+    @test equ_mod.B₁(t,x) == equ_mod.a * sin(equ_mod.Z(t,x)) + equ_mod.c * cos(equ_mod.Y(t,x))
+    @test equ_mod.B₂(t,x) == equ_mod.b * sin(equ_mod.X(t,x)) + equ_mod.a * cos(equ_mod.Z(t,x))
+    @test equ_mod.B₃(t,x) == equ_mod.c * sin(equ_mod.Y(t,x)) + equ_mod.b * cos(equ_mod.X(t,x))
+end
 
 @testset "$(rpad("Magnetic Fields",60))" begin
+    test_axisymmetric_tokamak_cartesian_equilibrium(AxisymmetricTokamakCartesianEquilibrium)
     test_axisymmetric_tokamak_cylindrical_equilibrium(AxisymmetricTokamakCylindricalEquilibrium)
     test_axisymmetric_tokamak_toroidal_equilibrium(AxisymmetricTokamakToroidalEquilibrium)
+    test_symmetric_quadratic_equilibrium(SymmetricQuadraticEquilibrium)
+    test_theta_pinch_equilibrium(ThetaPinchEquilibrium)
+    test_abc_equilibrium(ABCEquilibrium)
 end
 println()
